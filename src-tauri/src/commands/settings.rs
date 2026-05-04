@@ -9,7 +9,9 @@ use crate::utils::db_manager::{
     update_settings_third_party_repo_update
 };
 use crate::utils::repo_manager::get_manifest;
-use crate::utils::{get_mi_path_from_game, show_dialog_with_callback};
+use crate::utils::{compare_version, find_package_version, get_mi_path_from_game, show_dialog_with_callback};
+use crate::downloading::misc::get_latest_extra_version;
+use crate::utils::models::JadeiteStatus;
 use std::fs;
 use std::path::Path;
 use tauri::{AppHandle};
@@ -150,6 +152,42 @@ pub fn update_settings_default_mangohud_config_path(app: AppHandle, path: String
     } else {
         update_settings_default_mangohud_config_location(&app, p.to_str().unwrap().parse().unwrap());
     }
+    Some(true)
+}
+
+#[tauri::command]
+pub fn get_jadeite_status(app: AppHandle) -> Option<JadeiteStatus> {
+    let settings = get_settings(&app)?;
+    let version_path = Path::new(&settings.jadeite_path).join("VERSION.txt");
+    let installed_version = if version_path.exists() {
+        find_package_version(version_path.clone(), "JADEITE")
+            .or_else(|| find_package_version(version_path, "jadeite"))
+    } else {
+        None
+    };
+    let latest_version = get_latest_extra_version("jadeite", "jadeite");
+    let has_update = match (&installed_version, &latest_version) {
+        (Some(installed), Some(latest)) => compare_version(installed.as_str(), latest.as_str()).is_lt(),
+        _ => false,
+    };
+    Some(JadeiteStatus {
+        installed_version,
+        latest_version,
+        has_update,
+    })
+}
+
+#[tauri::command]
+pub fn update_jadeite(app: AppHandle) -> Option<bool> {
+    let settings = get_settings(&app)?;
+    let path = Path::new(&settings.jadeite_path).to_path_buf();
+    if !path.exists() {
+        if let Err(e) = fs::create_dir_all(&path) {
+            show_dialog_with_callback(&app, "error", "TwintailLauncher", format!("Failed to prepare Jadeite directory. {e}").as_str(), None, None);
+            return Some(false);
+        }
+    }
+    crate::downloading::misc::download_or_update_extra(&app, path, "jadeite".to_string(), "jadeite".to_string(), true, None);
     Some(true)
 }
 

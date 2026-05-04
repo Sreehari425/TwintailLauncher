@@ -37,6 +37,13 @@ pub struct GlobalSettings {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct JadeiteStatus {
+    pub installed_version: Option<String>,
+    pub latest_version: Option<String>,
+    pub has_update: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct RepositoryManifest {
     pub name: String,
     pub description: String,

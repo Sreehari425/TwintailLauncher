@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { POPUPS } from "./POPUPS.ts";
 import { PAGES } from "../pages/PAGES.ts";
 import { invoke } from "@tauri-apps/api/core";
@@ -81,6 +81,8 @@ export default function GameSettings({
     const [uninstallAcknowledged, setUninstallAcknowledged] = useState(false);
     const [keepGameUninstall, setKeepGameUninstall] = useState(false);
     const [isUninstalling, setIsUninstalling] = useState(false);
+    const [jadeiteStatus, setJadeiteStatus] = useState<{ installed_version?: string; latest_version?: string; has_update?: boolean } | null>(null);
+    const [jadeiteLoading, setJadeiteLoading] = useState(false);
     const isLinux = window.navigator.platform.includes("Linux");
 
     const tabs: SettingsTab[] = [
@@ -180,6 +182,32 @@ export default function GameSettings({
             console.error("Failed to update XXMI config:", e);
         }
     };
+
+    useEffect(() => {
+        if (!prefetchedSwitches.jadeite || !isLinux) {
+            return;
+        }
+        let active = true;
+        setJadeiteLoading(true);
+        invoke("get_jadeite_status")
+            .then((data) => {
+                if (active) {
+                    setJadeiteStatus(data as any);
+                }
+            })
+            .catch(() => {})
+            .finally(() => {
+                if (active) {
+                    setJadeiteLoading(false);
+                }
+            });
+        return () => {
+            active = false;
+        };
+    }, [prefetchedSwitches.jadeite, isLinux]);
+
+    const installedJadeite = jadeiteStatus?.installed_version || "Not installed";
+    const latestJadeite = jadeiteStatus?.latest_version || "Unknown";
 
     const canUninstall = showUninstallReview && uninstallAcknowledged && !isUninstalling;
     const isAuthkeyCopying = authkeyCopyState === "copying";
@@ -388,12 +416,45 @@ export default function GameSettings({
                                     onChange={(val) => handleUpdate("prefix_path", val)}
                                 />
                                 {prefetchedSwitches.jadeite && isLinux && (
-                                    <ModernToggle
-                                        label="Jadeite"
-                                        description="Enable Jadeite patch."
-                                        checked={installSettings.use_jadeite}
-                                        onChange={(val) => handleUpdate("use_jadeite", val)}
-                                    />
+                                    <>
+                                        <ModernToggle
+                                            label="Jadeite"
+                                            description="Enable Jadeite patch."
+                                            checked={installSettings.use_jadeite}
+                                            onChange={(val) => handleUpdate("use_jadeite", val)}
+                                        />
+                                        <div className="rounded-xl border border-white/10 bg-zinc-900/70 px-4 py-3">
+                                            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                                                <div>
+                                                    <div className="text-sm font-semibold text-zinc-100">Jadeite Version</div>
+                                                    <div className="text-xs text-zinc-400">Installed: {installedJadeite} · Latest: {latestJadeite}</div>
+                                                </div>
+                                                <button
+                                                    className={`inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${jadeiteStatus?.has_update ? "bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30" : "bg-white/5 text-zinc-400"}`}
+                                                    onClick={async () => {
+                                                        if (!jadeiteStatus?.has_update) {
+                                                            return;
+                                                        }
+                                                        setJadeiteLoading(true);
+                                                        try {
+                                                            await invoke("update_jadeite");
+                                                        } catch (_e) {
+                                                            // best-effort update
+                                                        } finally {
+                                                            const data = await invoke("get_jadeite_status").catch(() => null);
+                                                            if (data) {
+                                                                setJadeiteStatus(data as any);
+                                                            }
+                                                            setJadeiteLoading(false);
+                                                        }
+                                                    }}
+                                                    disabled={jadeiteLoading || !jadeiteStatus?.has_update}
+                                                >
+                                                    {jadeiteLoading ? "Checking..." : jadeiteStatus?.has_update ? "Update" : "Up to date"}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </>
                                 )}
                                 <ModernToggle
                                     label="Gamemode"

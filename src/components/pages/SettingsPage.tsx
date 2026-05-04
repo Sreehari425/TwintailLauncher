@@ -155,6 +155,12 @@ export default function SettingsPage({ settings, fetchSettings, setCurrentPage }
                                     onChange={(val) => updateSetting("xxmi_path", val)}
                                 />
                                 <ModernPathInput
+                                    label="Jadeite Location"
+                                    description="Directory where Jadeite is stored."
+                                    value={`${settings.jadeite_path}`}
+                                    onChange={(val) => updateSetting("jadeite_path", val)}
+                                />
+                                <ModernPathInput
                                     label="FPS Unlocker Location"
                                     description="Directory where the FPS unlocker is stored."
                                     value={`${settings.fps_unlock_path}`}
@@ -166,12 +172,6 @@ export default function SettingsPage({ settings, fetchSettings, setCurrentPage }
 
                     {activeTab === "linux" && (
                         <SettingsSection title="Linux Configuration">
-                            {/*<ModernPathInput
-                                label="Jadeite Location"
-                                description="Path to the Jadeite patch."
-                                value={`${settings.jadeite_path}`}
-                                onChange={(val) => updateSetting("jadeite_path", val)}
-                            />*/}
                             <ModernPathInput
                                 label="Default Runner Location"
                                 description="Base directory for Wine/Proton versions."

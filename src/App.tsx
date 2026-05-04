@@ -168,7 +168,7 @@ export default class App extends React.Component<any, any> {
             j.kind === 'xxmi_download' || (j.kind === 'extras_download' && xxmiPackageIds.includes(j.installId))
         );
         const isJadeiteDownloading = this.state.installSettings?.use_jadeite && allJobs.some((j: any) =>
-            j.kind === 'extras_download' && j.installId === 'v5.0.1-hotfix'
+            j.kind === 'extras_download' && j.installId === 'jadeite'
         );
         const isFpsUnlockDownloading = this.state.installSettings?.use_fps_unlock && allJobs.some((j: any) =>
             j.kind === 'extras_download' && j.installId === 'keqing_unlock'

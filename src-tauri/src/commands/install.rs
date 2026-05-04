@@ -400,7 +400,7 @@ pub fn update_install_use_jadeite(app: AppHandle, id: String, enabled: bool) -> 
         let m = manifest.unwrap();
         let p = Path::new(&settings.jadeite_path).to_path_buf();
         update_install_use_jadeite_by_id(&app, m.id, enabled);
-        if enabled { enqueue_extras_download(&app, p.to_str().unwrap().to_string(), "jadeite".to_string(), "v5.0.1-hotfix".to_string(), false); }
+        if enabled { enqueue_extras_download(&app, p.to_str().unwrap().to_string(), "jadeite".to_string(), "jadeite".to_string(), false); }
         Some(true)
     } else {
         None
