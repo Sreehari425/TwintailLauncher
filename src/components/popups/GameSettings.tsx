@@ -184,7 +184,7 @@ export default function GameSettings({
     };
 
     useEffect(() => {
-        if (!prefetchedSwitches.jadeite || !isLinux) {
+        if (!isLinux) {
             return;
         }
         let active = true;
@@ -204,7 +204,7 @@ export default function GameSettings({
         return () => {
             active = false;
         };
-    }, [prefetchedSwitches.jadeite, isLinux]);
+    }, [isLinux]);
 
     const installedJadeite = jadeiteStatus?.installed_version || "Not installed";
     const latestJadeite = jadeiteStatus?.latest_version || "Unknown";
@@ -415,7 +415,7 @@ export default function GameSettings({
                                     value={`${installSettings.runner_prefix}`}
                                     onChange={(val) => handleUpdate("prefix_path", val)}
                                 />
-                                {prefetchedSwitches.jadeite && isLinux && (
+                                {isLinux && (
                                     <>
                                         <ModernToggle
                                             label="Jadeite"
